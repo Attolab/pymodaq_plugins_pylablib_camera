@@ -16,6 +16,8 @@ class DAQ_2DViewer_BaslerPLL(DAQ_2DViewer_GenericPylablibCamera):
 
     params[next((i for i, item in enumerate(params) if item["name"] == "camera_list"), None)]['limits'] = camera_list
 
+    gain_name = None
+
     def init_controller(self):
         # Init camera with currently selected name
         camera = Basler.BaslerPylonCamera(name=self.params["camera_list"])
