@@ -12,6 +12,8 @@ class DAQ_2DViewer_BaslerPLL(DAQ_2DViewer_GenericPylablibCamera):
 
     # Update the params (nothing to change here)
     params = DAQ_2DViewer_GenericPylablibCamera.params
+
+    # Add Gain
     params += {'title': 'Gain', 'name': 'gain', 'type': 'float', 'value': 1.0, 'readonly': False, 'default': 1.0},
 
     params[next((i for i, item in enumerate(params) if item["name"] == "camera_list"), None)]['limits'] = camera_list
@@ -39,7 +41,7 @@ class DAQ_2DViewer_BaslerPLL(DAQ_2DViewer_GenericPylablibCamera):
 
     def commit_settings(self, param):
         if param.name() == "exposure_time":
-            exp = self.set_exposure(param.value() / 1000)
+            exp = self.exposure(param.value() / 1000)
             self.settings.child("timing_opts", "exposure_time").setValue(exp * 1000)
         elif param.name() == "gain":
             self.controller.cav[self.gain_name] = param.value()
@@ -47,20 +49,8 @@ class DAQ_2DViewer_BaslerPLL(DAQ_2DViewer_GenericPylablibCamera):
         else:
             super().commit_settings(param)
 
-    def set_exposure(self, exposure):
-        """
-        Sets the exposure of the camera
-        The class does not use directly the pylablib function because it does not cover cameras
-        with "ExposureTime" as attribute
-        We use microseconds here like in pylon
-        """
-        if "ExposureTime" in self.controller.attributes:
-            self.controller.cav["ExposureTime"] = exposure * 1E6
-        else:
-            self.controller.set_exposure(exposure)
-        return self.get_exposure()
-
-    def get_exposure(self):
+    @property
+    def exposure(self):
         """
         Gets the exposure of the camera
         The class does not use directly the pylablib function because it does not cover cameras
@@ -70,7 +60,23 @@ class DAQ_2DViewer_BaslerPLL(DAQ_2DViewer_GenericPylablibCamera):
         if exp is not None:
             return exp / 1e6
         else:
-            self.controller.get_exposure()
+            exp = self.controller.get_exposure()
+        return exp
+
+    @exposure.setter
+    def exposure(self, value):
+        """
+        Sets the exposure of the camera
+        The class does not use directly the pylablib function because it does not cover cameras
+        with "ExposureTime" as attribute
+        We use microseconds here like in pylon
+        """
+        if "ExposureTime" in self.controller.attributes:
+            self.controller.cav["ExposureTime"] = value * 1E6
+        else:
+            self.controller.set_exposure(value)
+        return self.exposure()
+
 
 if __name__ == '__main__':
     main(__file__)

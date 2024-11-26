@@ -111,6 +111,16 @@ class DAQ_2DViewer_GenericPylablibCamera(DAQ_Viewer_base):
     def ROISelect(self, roi_pos_size):
         self.roi_pos_size = roi_pos_size
 
+    @property
+    def exposure(self):
+        # By default, we use the PLL method, but for some subclasses it can be redefined
+        return self.controller.get_exposure()
+
+    @exposure.setter
+    def exposure(self, value):
+        exp = self.controller.set_exposure(value)
+        return exp
+
     def ini_detector(self, controller=None):
         """Detector communication initialization
 
@@ -134,7 +144,7 @@ class DAQ_2DViewer_GenericPylablibCamera(DAQ_Viewer_base):
         self.settings.child('camera_info').setValue(self.controller.get_device_info()[1])
 
         # Set exposure time
-        self.controller.set_exposure(self.settings.child('timing_opts', 'exposure_time').value() / 1000)
+        self.exposure(self.settings.child('timing_opts', 'exposure_time').value() / 1000)
 
         # FPS visibility
         self.settings.child('timing_opts', 'fps').setOpts(visible=self.settings.child('timing_opts', 'fps_on').value())
